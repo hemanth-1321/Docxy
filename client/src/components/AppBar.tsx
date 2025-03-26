@@ -1,27 +1,34 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Login from "./Login";
 
 const AppBar: React.FC = () => {
-  const [userToken, setUserToken] = useState<string | null>(null);
-  const navigate = useNavigate(); // Initialize navigation
-
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    setUserToken(token);
-
-    if (token) {
-      navigate("/letter"); // Navigate to the letter page if token exists
-    }
-  }, [navigate]);
+  const [userToken, setUserToken] = useState<string | null>(
+    localStorage.getItem("authToken")
+  );
+  const navigate = useNavigate();
 
   return (
-    <div>
-      <div>Assign</div>
-      <div>
-        {!userToken ? <Login /> : <div>Welcome! You are logged in.</div>}
+    <nav className="bg-blue-600 text-white py-3 px-6 flex justify-between items-center shadow-lg">
+      {/* Logo */}
+   <a href="/">   <div className="text-2xl font-bold tracking-wide cursor-pointer">
+        Doc<span className="text-yellow-300">xy</span>
+      </div></a>
+
+      {/* Right Section */}
+      <div className="flex items-center space-x-4">
+        {!userToken ? (
+          <Login />
+        ) : (
+          <button
+            onClick={() => navigate("/letter")}
+            className="bg-white text-blue-600 cursor-pointer px-4 py-2 rounded-lg font-semibold shadow-md hover:bg-gray-100"
+          >
+            Dashboard
+          </button>
+        )}
       </div>
-    </div>
+    </nav>
   );
 };
 

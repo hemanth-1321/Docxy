@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadFile = void 0;
+exports.deleteFile = exports.updateFile = exports.uploadFile = void 0;
 const googleapis_1 = require("googleapis");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
@@ -23,6 +23,9 @@ oauth2Client.setCredentials({
     refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
 });
 const drive = googleapis_1.google.drive({ version: "v3", auth: oauth2Client });
+/**
+ * Uploads a file to Google Drive
+ */
 const uploadFile = (content, title) => __awaiter(void 0, void 0, void 0, function* () {
     const filePath = path_1.default.join(__dirname, `${title}.html`);
     // Save HTML content to a temporary file
@@ -61,3 +64,39 @@ const uploadFile = (content, title) => __awaiter(void 0, void 0, void 0, functio
     };
 });
 exports.uploadFile = uploadFile;
+/**
+ * Updates an existing file in Google Drive
+ */
+const updateFile = (fileId, newContent, newTitle) => __awaiter(void 0, void 0, void 0, function* () {
+    const filePath = path_1.default.join(__dirname, `${newTitle}.html`);
+    fs_1.default.writeFileSync(filePath, newContent);
+    const response = yield drive.files.update({
+        fileId: fileId,
+        requestBody: {
+            name: newTitle,
+            mimeType: "application/vnd.google-apps.docs",
+        },
+        media: {
+            mimeType: "text/html",
+            body: fs_1.default.createReadStream(filePath),
+        },
+        fields: "id, webViewLink, webContentLink",
+    });
+    fs_1.default.unlinkSync(filePath); // Remove temp file
+    console.log("File updated successfully!", response.data);
+    return {
+        id: response.data.id,
+        viewLink: response.data.webViewLink,
+        downloadLink: response.data.webContentLink,
+    };
+});
+exports.updateFile = updateFile;
+/**
+ * Deletes a file from Google Drive
+ */
+const deleteFile = (fileId) => __awaiter(void 0, void 0, void 0, function* () {
+    yield drive.files.delete({ fileId });
+    console.log(`File ${fileId} deleted successfully`);
+    return { message: "File deleted successfully", fileId };
+});
+exports.deleteFile = deleteFile;

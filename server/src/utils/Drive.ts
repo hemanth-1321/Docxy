@@ -17,6 +17,9 @@ oauth2Client.setCredentials({
 
 const drive = google.drive({ version: "v3", auth: oauth2Client });
 
+/**
+ * Uploads a file to Google Drive
+ */
 export const uploadFile = async (content: string, title: string) => {
   const filePath = path.join(__dirname, `${title}.html`);
 
@@ -41,6 +44,7 @@ export const uploadFile = async (content: string, title: string) => {
   if (!fileId) {
     throw new Error("File ID is undefined. Upload failed.");
   }
+
   // Make the file publicly accessible
   await drive.permissions.create({
     fileId: fileId,
@@ -59,4 +63,47 @@ export const uploadFile = async (content: string, title: string) => {
     viewLink: response.data.webViewLink,
     downloadLink: response.data.webContentLink,
   };
+};
+
+/**
+ * Updates an existing file in Google Drive
+ */
+export const updateFile = async (
+  fileId: string,
+  newContent: string,
+  newTitle: string
+) => {
+  const filePath = path.join(__dirname, `${newTitle}.html`);
+  fs.writeFileSync(filePath, newContent);
+
+  const response = await drive.files.update({
+    fileId: fileId,
+    requestBody: {
+      name: newTitle,
+      mimeType: "application/vnd.google-apps.docs",
+    },
+    media: {
+      mimeType: "text/html",
+      body: fs.createReadStream(filePath),
+    },
+    fields: "id, webViewLink, webContentLink",
+  });
+
+  fs.unlinkSync(filePath); // Remove temp file
+
+  console.log("File updated successfully!", response.data);
+  return {
+    id: response.data.id,
+    viewLink: response.data.webViewLink,
+    downloadLink: response.data.webContentLink,
+  };
+};
+
+/**
+ * Deletes a file from Google Drive
+ */
+export const deleteFile = async (fileId: string) => {
+  await drive.files.delete({ fileId });
+  console.log(`File ${fileId} deleted successfully`);
+  return { message: "File deleted successfully", fileId };
 };

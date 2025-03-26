@@ -1,44 +1,77 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { Editor, EditorTextChangeEvent } from "primereact/editor";
-import axios from 'axios';
+import axios from "axios";
+import { BACKEND_URL } from "@/lib/Api";
 
-const LetterEditor = () => {
-  const [title, setTitle] = useState<string>('');
-  const [text, setText] = useState<string>('');
-    const [token, setToken] = useState<string | null>(null);
-    
-     useEffect(() => {
-    const savedToken = localStorage.getItem("authToken"); 
+interface Letter {
+  id?: string;
+  title: string;
+  content: string;
+}
+
+interface LetterEditorProps {
+  selectedLetter: Letter | null;
+  refreshLetters: () => void;
+}
+
+const LetterEditor: React.FC<LetterEditorProps> = ({ selectedLetter, refreshLetters }) => {
+  const [letterId, setLetterId] = useState<string | null>(null);
+  const [title, setTitle] = useState<string>("");
+  const [text, setText] = useState<string>("");
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("authToken");
     if (savedToken) {
       setToken(savedToken);
     }
   }, []);
+
+  // Reset the editor content when selectedLetter changes
+  useEffect(() => {
+    if (selectedLetter) {
+      setLetterId(selectedLetter.id || null);
+      setTitle(selectedLetter.title);
+      setText(selectedLetter.content);
+    } else {
+      setLetterId(null);
+      setTitle("");
+      setText("");
+    }
+  }, [selectedLetter]);
+
   const handleTextChange = (e: EditorTextChangeEvent) => {
-    const newText = e.htmlValue || '';
-    setText(newText);
-    console.log("Editor Content:", newText);
+    setText(e.htmlValue || "");
   };
 
-  const handleSend = async () => {
-    console.log("Title:", title);
-    console.log("Content:", text);
-    console.log("token",token)
+  const handleSave = async () => {
+    if (!token) return alert("User not authenticated!");
+
     try {
-        const response = await axios.post('http://localhost:8080/api/letters/upload', { title, content: text }, {
-            headers: {
-              Authorization:`Bearer ${token}`
-          }
+      const url = letterId
+        ? `${BACKEND_URL}/letters/update/${letterId}`
+        : `${BACKEND_URL}/letters/upload`;
+
+      const method = letterId ? "put" : "post";
+
+      const response = await axios({
+        method,
+        url,
+        data: { title, content: text },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Response from server:", response.data);
-      alert("Letter sent successfully!");
+
+      alert(letterId ? "Letter updated successfully!" : "Letter created successfully!");
+
+      refreshLetters();
     } catch (error) {
-      console.error("Error sending data:", error);
-      alert("Failed to send letter.");
+      console.error("Error saving letter:", error);
+      alert("Failed to save letter.");
     }
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto bg-white rounded-xl shadow-md space-y-4 ">
+    <div className="p-6 max-w-2xl mx-auto bg-white rounded-xl shadow-md space-y-4">
       <input
         type="text"
         placeholder="Enter Title"
@@ -49,18 +82,16 @@ const LetterEditor = () => {
 
       <div>
         <h2 className="text-lg font-semibold mb-2">Editor</h2>
-        <Editor
-          value={text}
-          onTextChange={handleTextChange}
-          style={{ height: '320px' }}
-        />
+        <Editor value={text} onTextChange={handleTextChange} style={{ height: "320px" }} />
       </div>
 
       <button
-        onClick={handleSend}
-        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+        onClick={handleSave}
+        className={`px-4 py-2 rounded-lg transition ${
+          letterId ? "bg-green-500 hover:bg-green-600" : "bg-blue-500 hover:bg-blue-600"
+        } text-white`}
       >
-        Send
+        {letterId ? "Update" : "Save"}
       </button>
     </div>
   );

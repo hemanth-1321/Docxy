@@ -33,6 +33,7 @@ router.post("/upload", middleware_1.authenticateUser, (req, res) => __awaiter(vo
             data: {
                 userId,
                 title,
+                content,
                 fileId: fileData.id,
                 viewLink: fileData.viewLink,
             },
@@ -41,6 +42,67 @@ router.post("/upload", middleware_1.authenticateUser, (req, res) => __awaiter(vo
     }
     catch (error) {
         res.status(500).json({ message: "Upload failed", error });
+    }
+}));
+router.get("/user-files", middleware_1.authenticateUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    try {
+        const files = yield prisma.uploadedFile.findMany({
+            where: { userId },
+            orderBy: { createdAt: "desc" },
+        });
+        res.status(200).json({ files });
+    }
+    catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error fetching files", error: error.message });
+    }
+}));
+router.put("/update/:id", middleware_1.authenticateUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    const fileId = req.params.id;
+    const { content, title } = req.body;
+    if (!content || !title) {
+        res.status(400).json({ message: "Missing content or title" });
+    }
+    try {
+        const existingFile = yield prisma.uploadedFile.findUnique({
+            where: { id: fileId },
+        });
+        if (!existingFile || existingFile.userId !== userId) {
+            res.status(404).json({ message: "File not found or unauthorized" });
+            return;
+        }
+        yield (0, Drive_1.updateFile)(existingFile.fileId, content, title);
+        const updatedFile = yield prisma.uploadedFile.update({
+            where: { id: fileId },
+            data: { title, content },
+        });
+        res.status(200).json({ message: "File updated", updatedFile });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Update failed", error });
+    }
+}));
+// 🔹 DELETE a file
+router.delete("/delete/:id", middleware_1.authenticateUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user.id;
+    const fileId = req.params.id;
+    try {
+        const existingFile = yield prisma.uploadedFile.findUnique({
+            where: { id: fileId },
+        });
+        if (!existingFile || existingFile.userId !== userId) {
+            res.status(404).json({ message: "File not found or unauthorized" });
+            return;
+        }
+        yield (0, Drive_1.deleteFile)(existingFile.fileId);
+        yield prisma.uploadedFile.delete({ where: { id: fileId } });
+        res.status(200).json({ message: "File deleted successfully" });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Deletion failed", error });
     }
 }));
 exports.default = router;

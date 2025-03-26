@@ -36,6 +36,7 @@ model UploadedFile {
   id        String   @id @default(uuid())
   userId    String
   title     String
+  content   String?
   fileId    String
   viewLink  String
   createdAt DateTime @default(now())
