@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Editor, EditorTextChangeEvent } from "primereact/editor";
+import { ProgressSpinner } from "primereact/progressspinner";
 import axios from "axios";
 import { BACKEND_URL } from "@/lib/Api";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface Letter {
   id?: string;
@@ -19,6 +22,7 @@ const LetterEditor: React.FC<LetterEditorProps> = ({ selectedLetter, refreshLett
   const [title, setTitle] = useState<string>("");
   const [text, setText] = useState<string>("");
   const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("authToken");
@@ -27,7 +31,6 @@ const LetterEditor: React.FC<LetterEditorProps> = ({ selectedLetter, refreshLett
     }
   }, []);
 
-  // Reset the editor content when selectedLetter changes
   useEffect(() => {
     if (selectedLetter) {
       setLetterId(selectedLetter.id || null);
@@ -45,7 +48,12 @@ const LetterEditor: React.FC<LetterEditorProps> = ({ selectedLetter, refreshLett
   };
 
   const handleSave = async () => {
-    if (!token) return alert("User not authenticated!");
+    if (!token) {
+      toast.warn("User not authenticated!", { position: "top-right" });
+      return;
+    }
+
+    setLoading(true); // Start loading
 
     try {
       const url = letterId
@@ -54,30 +62,37 @@ const LetterEditor: React.FC<LetterEditorProps> = ({ selectedLetter, refreshLett
 
       const method = letterId ? "put" : "post";
 
-      const response = await axios({
+      await axios({
         method,
         url,
         data: { title, content: text },
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      alert(letterId ? "Letter updated successfully!" : "Letter created successfully!");
+      toast.success(letterId ? "Letter updated successfully!" : "Letter created successfully!", {
+        position: "top-right",
+      });
 
       refreshLetters();
     } catch (error) {
       console.error("Error saving letter:", error);
-      alert("Failed to save letter.");
+      toast.error("Failed to save letter.", { position: "top-right" });
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
   return (
     <div className="p-6 max-w-2xl mx-auto bg-white rounded-xl shadow-md space-y-4">
+      <ToastContainer /> {/* Toast container for notifications */}
+
       <input
         type="text"
         placeholder="Enter Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+        disabled={loading}
       />
 
       <div>
@@ -87,11 +102,12 @@ const LetterEditor: React.FC<LetterEditorProps> = ({ selectedLetter, refreshLett
 
       <button
         onClick={handleSave}
-        className={`px-4 py-2 rounded-lg transition ${
-          letterId ? "bg-green-500 hover:bg-green-600" : "bg-blue-500 hover:bg-blue-600"
+        className={`px-4 py-2 rounded-lg transition flex items-center justify-center ${
+          letterId ? "bg-green-500 hover:bg-green-600" : "bg-blue-950 hover:bg-blue-900"
         } text-white`}
+        disabled={loading}
       >
-        {letterId ? "Update" : "Save"}
+        {loading ? <ProgressSpinner style={{ width: '20px', height: '20px' }} strokeWidth="4" /> : letterId ? "Update" : "Save"}
       </button>
     </div>
   );

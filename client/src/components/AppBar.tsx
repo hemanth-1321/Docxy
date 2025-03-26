@@ -9,7 +9,7 @@ const AppBar: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <nav className="bg-blue-600 text-white py-3 px-6 flex justify-between items-center shadow-lg">
+    <nav className="bg-blue-950 text-white py-3 px-6 flex justify-between items-center shadow-lg">
       {/* Logo */}
    <a href="/">   <div className="text-2xl font-bold tracking-wide cursor-pointer">
         Doc<span className="text-yellow-300">xy</span>
@@ -22,7 +22,7 @@ const AppBar: React.FC = () => {
         ) : (
           <button
             onClick={() => navigate("/letter")}
-            className="bg-white text-blue-600 cursor-pointer px-4 py-2 rounded-lg font-semibold shadow-md hover:bg-gray-100"
+            className="bg-gray-200 text-blue-950 cursor-pointer px-4 py-2 rounded-lg font-semibold shadow-md hover:bg-gray-100"
           >
             Dashboard
           </button>

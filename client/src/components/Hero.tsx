@@ -12,7 +12,7 @@ export const Home: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-gray-900">
+    <div className="min-h-screen flex flex-col bg-[#f4f2ee] text-gray-900">
       {/* Hero Section */}
       <div className="flex-grow max-w-5xl mx-auto px-6 py-16 text-center">
         <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-6">
@@ -27,7 +27,7 @@ export const Home: React.FC = () => {
         {userToken && (
           <button
             onClick={() => navigate("/letter")}
-            className="bg-blue-600 text-white px-5 py-3 text-lg font-semibold rounded-full shadow-md hover:bg-blue-700 flex items-center gap-2 mx-auto"
+            className="bg-blue-950 text-white px-5 py-3 text-lg font-semibold rounded-full shadow-md hover:bg-blue-900 flex items-center gap-2 mx-auto"
           >
             Get Started <ArrowRight size={20} />
           </button>
@@ -44,7 +44,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-100 text-gray-700 py-8 mt-16">
+      <footer className="bg-gray-400 text-gray-700 py-8 mt-16">
         <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
           {/* Brand Name */}
           <div className="text-xl font-bold">

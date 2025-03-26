@@ -23,7 +23,6 @@ const drive = google.drive({ version: "v3", auth: oauth2Client });
 export const uploadFile = async (content: string, title: string) => {
   const filePath = path.join(__dirname, `${title}.html`);
 
-  // Save HTML content to a temporary file
   fs.writeFileSync(filePath, content);
 
   const response = await drive.files.create({
@@ -32,20 +31,19 @@ export const uploadFile = async (content: string, title: string) => {
       mimeType: "application/vnd.google-apps.docs", // Google Docs format
     },
     media: {
-      mimeType: "text/html", // Uploading as HTML
+      mimeType: "text/html",
       body: fs.createReadStream(filePath),
     },
     fields: "id, webViewLink, webContentLink",
   });
 
-  fs.unlinkSync(filePath); // Remove temp file
+  fs.unlinkSync(filePath);
 
   const fileId = response.data.id;
   if (!fileId) {
     throw new Error("File ID is undefined. Upload failed.");
   }
 
-  // Make the file publicly accessible
   await drive.permissions.create({
     fileId: fileId,
     requestBody: {
@@ -89,7 +87,7 @@ export const updateFile = async (
     fields: "id, webViewLink, webContentLink",
   });
 
-  fs.unlinkSync(filePath); // Remove temp file
+  fs.unlinkSync(filePath);
 
   console.log("File updated successfully!", response.data);
   return {
